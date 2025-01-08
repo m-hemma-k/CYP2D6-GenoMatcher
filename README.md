@@ -43,7 +43,7 @@ This repository contains a Python script designed to preprocess and analyze hapl
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-repo-name.git
+   git clone git@github.com:m-hemma-k/CYP2D6.vcf.git
    ```
 
 2. Install the required dependencies:
