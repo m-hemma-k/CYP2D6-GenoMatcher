@@ -6,6 +6,65 @@ import re
 import os
 from datetime import datetime
 
+def process_tsv_and_vcf(tsv_dir, vcf_dir, output_path):
+    """
+    Updates a TSV file with data from multiple VCF files.
+
+    Args:
+        tsv_path (str): Path to the input TSV file.
+        vcf_dir (str): Directory containing VCF files.
+        output_path (str): Path to save the updated TSV file.
+
+    Returns:
+        None: The updated TSV file is saved to the specified output path.
+    """
+    # Automatically find the TSV file in the directory
+    tsv_file = next((file for file in os.listdir(tsv_dir) if file.endswith(".tsv")), None)
+    if not tsv_file:
+        raise FileNotFoundError("No TSV file found in the specified directory.")
+
+    tsv_path = os.path.join(tsv_dir, tsv_file)
+
+    # Load the TSV file and adjust header
+    tsv_data = pd.read_csv(tsv_path, sep="\t", skiprows=1, header=0)
+
+    # Ensure Variant Start and Variant Stop are integers
+    tsv_data["Variant Start"] = pd.to_numeric(tsv_data["Variant Start"], errors="coerce").fillna(0).astype(int)
+    tsv_data["Variant Stop"] = pd.to_numeric(tsv_data["Variant Stop"], errors="coerce").fillna(0).astype(int)
+
+    # Filter rows containing 'insertion' or 'deletion'
+    filtered_data = tsv_data[tsv_data["Type"].str.contains("insertion|deletion", case=False, na=False)]
+
+    # Process each VCF file one by one
+    for vcf_file in os.listdir(vcf_dir):
+        if vcf_file.endswith(".vcf"):
+            vcf_path = os.path.join(vcf_dir, vcf_file)
+
+            with open(vcf_path, "r") as vcf:
+                for line in vcf:
+                    if line.startswith("#"):  # Skip header lines
+                        continue
+                    fields = line.strip().split("\t")
+                    pos, ref, alt = int(fields[1]), fields[3], fields[4]
+
+                    # Check if the POS matches any in the TSV file
+                    for index, row in filtered_data.iterrows():
+                        variant_start = row["Variant Start"]
+
+                        # Adjust comparison for deletion
+                        if "deletion" in row["Type"].lower():
+                            match_pos = pos + 1
+                        else:
+                            match_pos = pos
+
+                        if variant_start == match_pos:  # Match based on POS
+                            # Update Variant Allele and Alternate Allele for insertion/deletion
+                            tsv_data.at[index, "Reference Allele"] = ref
+                            tsv_data.at[index, "Variant Allele"] = alt
+
+    # Save the updated TSV data to a new file
+    tsv_data.to_csv(output_path, sep="\t", index=False)
+
 def filter_for_rsnumbers(pharmvardata, specific_rsIds):
     """
     Filter PharmVar data to include only the specified rsIDs and ensure haplotypes 
@@ -302,15 +361,23 @@ def save_dataframe_to_pickle(dataframe, save_directory):
 def main():
     """
     Main function to execute the processing pipeline:
-    1. Load PharmVar data and specific rsIDs.
-    2. Filter and preprocess haplotype data.
-    3. Generate special combinations.
-    4. Assign CNV Exon 9 values, duplications, triplications and rankings.
-    5. Pair haplotypes and convert to a DataFrame.
-    6. Save the final DataFrame to a pickle file.
+    1. Rewrite Reference Allele and Stop with ALT and REF from vcf files.
+    2. Load PharmVar data and specific rsIDs.
+    3. Filter and preprocess haplotype data.
+    4. Generate special combinations.
+    5. Assign CNV Exon 9 values, duplications, triplications and rankings.
+    6. Pair haplotypes and convert to a DataFrame.
+    7. Save the final DataFrame to a pickle file.
     """
+
+    # Rewrite data with vcf files
+    tsv_path = './input/RefSeqGene'
+    vcf_dir = './input/RefSeqGene'
+    output_path = './input/CYP2D6.tsv'
+    process_tsv_and_vcf(tsv_path, vcf_dir, output_path)
+
     # Read in data from PharmVar
-    file_path = './input/CYP2D6.NG_008376.4.haplotypes.tsv'
+    file_path = output_path
     pharm_var_data = pd.read_csv(file_path, sep='\t', header=0, comment='#')
 
     # Read in specified rsIDs
@@ -389,7 +456,7 @@ def main():
 
     # Convert dict to pandaframe
     pf_combinations = combinations_dict_to_dataframe(combinations)
-    print(pf_combinations)
+    # print(pf_combinations)
 
     # Save dataframe to pkl
     filepath = './output/'

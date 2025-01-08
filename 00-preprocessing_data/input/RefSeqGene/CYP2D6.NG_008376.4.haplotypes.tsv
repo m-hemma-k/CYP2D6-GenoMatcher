@@ -1,4 +1,4 @@
-#version=pharmvar-6.1.8
+#version=pharmvar-6.2
 Haplotype Name	Gene	rsID	ReferenceSequence	Variant Start	Variant Stop	Reference Allele	Variant Allele	Type
 CYP2D6*1	CYP2D6		REFERENCE	.				
 CYP2D6*1.001	CYP2D6		REFERENCE	.				
