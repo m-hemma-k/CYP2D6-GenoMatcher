@@ -109,6 +109,37 @@ def print_matches(diplotypes_df, matches):
 
     Args:
         diplotypes_df (pd.DataFrame): DataFrame containing genotypes, rankings, and CNV values.
+        matches (list): List of genotype names to filter and print. Prints only highest ranked genotype.
+
+    Returns:
+        None
+    """
+
+    # Filter rows in diplotypes_df that match the Genotype in matches
+    matches_df = diplotypes_df[diplotypes_df['Genotype'].isin(matches)]
+
+    # Sort the filtered DataFrame by Ranking in descending order
+    matches_sorted = matches_df.sort_values(by='Ranking', ascending=False)
+
+    # Print only the first match with Ranking and CNV values
+    if not matches_sorted.empty:
+        first_match = matches_sorted.iloc[0]
+        genotype = first_match['Genotype']
+        
+        # Adjust the genotype to remove redundant "CYP2D6" prefixes
+        adjusted_genotype = re.sub(r'\bCYP2D6\*', '*', genotype)  # Remove all "CYP2D6*"
+        adjusted_genotype = adjusted_genotype.replace('*', 'CYP2D6*', 1)  # Add back the first "CYP2D6*"
+        
+        print(adjusted_genotype)
+    else:
+        print("No matches found.")
+
+def print_all_matches(diplotypes_df, matches):
+    """
+    Print matched genotypes sorted by ranking and include CNV values.
+
+    Args:
+        diplotypes_df (pd.DataFrame): DataFrame containing genotypes, rankings, and CNV values.
         matches (list): List of genotype names to filter and print.
 
     Returns:
@@ -121,7 +152,7 @@ def print_matches(diplotypes_df, matches):
     matches_sorted = matches_df.sort_values(by='Ranking', ascending=False)
 
     # Print the sorted matches with Ranking and CNV values
-    print("Matches nach Wahrscheinlichkeit absteigend sortiert:")
+    # print("Matches nach Wahrscheinlichkeit absteigend sortiert:")
     for _, row in matches_sorted.iterrows():
         genotype = row['Genotype']
         ranking = row['Ranking']
@@ -140,7 +171,7 @@ def main():
     """
 
     # Step 1: Load the reference DataFrame containing diplotypes
-    file_path = '../00-preprocessing_data/output/CYP2D6_2025-01-09.pkl'
+    file_path = '../00-preprocessing_data/output/CYP2D6_2025-01-10.pkl'
     diplotypes_df = pd.read_pickle(file_path)
 
     # Step 2: Load the VCF file with sample genotype data
@@ -153,6 +184,7 @@ def main():
 
     # Step 4: Extract genotypes for specific rsIDs from the VCF data
     sample_data = extract_rs_genotypes(diplotypes_df, vcf_data)
+    sample_data['CNV'] = CNV_value
 
     # Step 5: Compare the extracted genotypes against the reference DataFrame
     results = evaluate_matches(diplotypes_df, sample_data)

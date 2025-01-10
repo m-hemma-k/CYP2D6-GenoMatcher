@@ -446,7 +446,7 @@ def main():
 
     # Add a ranking according to a Nature Paper - CYP2D6 Overview: Alelle and Phenotype Frequencies, Megan Kane, PhD., October 15, 2021.
     ranking = {
-        'Top Tier': ['CYP2D6*1', 'CYP2D6*2', 'CYP2D6*3', 'CYP2D6*4', 'CYP2D6*5', 'CYP2D6*6', 'CYP2D6*9', 'CYP2D6*10', 'CYP2D6*17', 'CYP2D6*29', 'CYP2D6*41'],
+        'Top Tier': ['CYP2D6*1', 'CYP2D6*2', 'CYP2D6*3', 'CYP2D6*4', 'CYP2D6*6', 'CYP2D6*9', 'CYP2D6*10', 'CYP2D6*17', 'CYP2D6*29', 'CYP2D6*41'],
         '2nd Tier': ['CYP2D6*7', 'CYP2D6*8', 'CYP2D6*12', 'CYP2D6*14', 'CYP2D6*15', 'CYP2D6*21', 'CYP2D6*31', 'CYP2D6*40', 'CYP2D6*42', 'CYP2D6*49', 'CYP2D6*56', 'CYP2D6*59']
     } # Multiplications are also 'Top Tier', hybrid genes are '2nd Tier'.
     haplotypes_dic = add_ranking(data_with_cnv, ranking)
