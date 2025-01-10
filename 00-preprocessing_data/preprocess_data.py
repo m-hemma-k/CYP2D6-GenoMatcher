@@ -371,8 +371,8 @@ def main():
     """
 
     # Rewrite data with vcf files
-    tsv_path = './input/RefSeqGene'
-    vcf_dir = './input/RefSeqGene'
+    tsv_path = './input/CYP2D6-6.2/GRCh38'
+    vcf_dir = tsv_path
     output_path = './input/CYP2D6.tsv'
     process_tsv_and_vcf(tsv_path, vcf_dir, output_path)
 
