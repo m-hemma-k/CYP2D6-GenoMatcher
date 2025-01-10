@@ -67,91 +67,98 @@ def extract_rs_genotypes(diplotypes_df, vcf_df):
     
     return genotypes
 
+def evaluate_matches(diplotypes_df, data_input):
+    """
+    Match user-provided genetic input against a diplotypes DataFrame.
 
-# Funktion für den Abgleich und Sortierung nach Ranking
-def match_and_sort(diplotypes_df, sample_data):
-    # Entferne die Spalte 'Ranking' für den Abgleich
-    diplotypes_df_filtered = diplotypes_df.drop(columns=['Ranking'])
+    Args:
+        diplotypes_df (pd.DataFrame): DataFrame containing SNPs and genotypes.
+        data_input (dict): Dictionary with SNP rsIDs as keys and allele values as strings.
 
-    # Abgleich der Zeilen mit sample_data
-    matching_rows = diplotypes_df_filtered[
-        diplotypes_df_filtered.apply(
-            lambda row: all(row[key] == value for key, value in sample_data.items() if key in row.index), axis=1
-        )
-    ]
+    Returns:
+        list: Genotype names from the DataFrame that match the user input.
+    """
+    # Create an empty list for matches
+    matches = []
 
-    # Füge die Ranking-Spalte hinzu und sortiere die Ergebnisse
-    matching_rows['Ranking'] = diplotypes_df.loc[matching_rows.index, 'Ranking']
-    matching_rows = matching_rows.sort_values(by='Ranking', ascending=False)
+    # Convert data_input into a DataFrame
+    user_df = pd.DataFrame(data_input, index=[0])
 
-    # Nur die Genotype-Spalte ausgeben
-    return matching_rows['Genotype']
+    for i, row in diplotypes_df.iterrows():
+        try:
+            # Check if all alleles match for the SNPs present in both user inputs and the DataFrame
+            allele_match = all([
+                set(user_df.loc[0, rsID].split('/')) == set(str(row[rsID]).split('/'))
+                for rsID in data_input.keys()  # Check only keys in data_input
+                if rsID in row.index  # Ensure rsID exists in the DataFrame
+            ])
 
+            # If there's a match, append the index or relevant column (e.g., 'Genotype') to the results
+            if allele_match:
+                matches.append(row['Genotype'])  # Add 'Genotype' to the match list
+
+        except KeyError as e:
+            # Handle cases where the data_input have an SNP not in the DataFrame
+            print(f"KeyError: {e}. Check if all SNPs in data_input exist in the DataFrame.")
+
+    return matches
 
 def print_matches(diplotypes_df, matches):
     """
-    Prints matches sorted by 'Ranking' value.
+    Print matched genotypes sorted by ranking and include CNV values.
 
     Args:
-        diplotypes_df (pd.DataFrame): Reference genotype DataFrame.
-        matches (list): List of matching row indices.
-    """
-    matches_sorted = sorted(matches, key=lambda x: diplotypes_df.loc[x, 'Ranking'], reverse=True)
-    print("Matches sorted by probability (Ranking) descending:")
-    for match in matches_sorted:
-        tier_value = diplotypes_df.loc[match, 'Ranking']
-        cnv_value = diplotypes_df.loc[match, 'CNV']
-        print(f"100% Match: Row {match}, Ranking: {tier_value}, CNV: {cnv_value}")
+        diplotypes_df (pd.DataFrame): DataFrame containing genotypes, rankings, and CNV values.
+        matches (list): List of genotype names to filter and print.
 
+    Returns:
+        None
+    """
+    # Filter rows in diplotypes_df that match the Genotype in matches
+    matches_df = diplotypes_df[diplotypes_df['Genotype'].isin(matches)]
+
+    # Sort the filtered DataFrame by Ranking in descending order
+    matches_sorted = matches_df.sort_values(by='Ranking', ascending=False)
+
+    # Print the sorted matches with Ranking and CNV values
+    print("Matches nach Wahrscheinlichkeit absteigend sortiert:")
+    for _, row in matches_sorted.iterrows():
+        genotype = row['Genotype']
+        ranking = row['Ranking']
+        cnv_value = row['CNV']
+        print(f"100% Match: {genotype}, Ranking: {ranking}, CNV-Wert: {cnv_value}")
 
 def main():
     """
-    Main function to load VCF data, extract genotypes, compare against reference,
-    and print matching rows.
+    Main function to execute the genotype matching pipeline:
+    1. Load the reference DataFrame containing diplotypes.
+    2. Load and process VCF data to extract genotypes.
+    3. Extract the CNV value from the VCF data.
+    4. Compare user-provided genotypes against the reference DataFrame.
+    5. Identify and rank matches based on likelihood and CNV values.
+    6. Print the results sorted by ranking and CNV values.
     """
-    # Load the reference DataFrame
-    file_path = '../00-preprocessing_data/output/CYP2D6_2024-12-16.pkl'
+
+    # Step 1: Load the reference DataFrame containing diplotypes
+    file_path = '../00-preprocessing_data/output/CYP2D6_2025-01-09.pkl'
     diplotypes_df = pd.read_pickle(file_path)
 
-    # Load the VCF file
+    # Step 2: Load the VCF file with sample genotype data
     sample_filepath = './input/Test_Input_1_1.vcf'
     vcf_data = read_vcf(sample_filepath)
-    # print(vcf_data)
-    # Save as CSV
-    # diplotypes_csv_path = './N8A1499_PharmCatInput.csv'
-    # diplotypes_df.to_csv(diplotypes_csv_path, index=False)
 
-    sample_data = extract_rs_genotypes(diplotypes_df, vcf_data)
-
-    # Extrahiere CNV-Wert aus vcf_data
+    # Step 3: Extract the CNV value from the VCF data
     CNV = vcf_data.loc[vcf_data['ID'] == 'CYP2D6_CNV', 'PharmCAT']
     CNV_value = CNV.iloc[0] if not CNV.empty else None
+
+    # Step 4: Extract genotypes for specific rsIDs from the VCF data
     sample_data = extract_rs_genotypes(diplotypes_df, vcf_data)
-    sample_data['CNV'] = CNV_value
 
-    # Ausgabe des Ergebnisses
-    print(sample_data)
+    # Step 5: Compare the extracted genotypes against the reference DataFrame
+    results = evaluate_matches(diplotypes_df, sample_data)
 
-    # Entferne die 'Ranking'-Spalte aus diplotypes_df
-    diplotypes_df_filtered = diplotypes_df.drop(columns=['Ranking'], errors='ignore')
-
-    # Abgleich mit sample_data
-    matching_rows = diplotypes_df_filtered[
-        diplotypes_df_filtered.apply(lambda row: all(row[key] == value for key, value in sample_data.items() if key in row), axis=1)
-    ]
-
-    results = match_and_sort(diplotypes_df, sample_data)
-    # Ausgabe der übereinstimmenden Zeilen
-    print(results)
-
-    # # Evaluate matches
-    # matches = evaluate_matches(diplotypes_df, sample_data, user_cnv)
-
-    # # Print results
-    # if matches:
-    #     print_matches(diplotypes_df, matches)
-    # else:
-    #     print("No matches found.")
+    # Step 6: Print the matched genotypes sorted by ranking and CNV values
+    print_matches(diplotypes_df, results)
 
 
 if __name__ == '__main__':

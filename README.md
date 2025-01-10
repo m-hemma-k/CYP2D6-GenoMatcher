@@ -163,4 +163,4 @@ Available at: https://www.ncbi.nlm.nih.gov/books/NBK574601/
 
 ## Contact
 
-For any questions, issues, or suggestions, please contact here or on LinkedIn [www.linkedin.com/in/maria-hemma-kargl].
+For any questions, issues, or suggestions, please contact here or on LinkedIn [www.linkedin.com/in/hemma-kargl].
