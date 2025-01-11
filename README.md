@@ -174,7 +174,7 @@ This repository is licensed under the **MIT License**.Please refer to the `LICEN
 
 If you use this script or any part of it for **publication or presentation**, please cite:
 
-**Hemma Kargl, 2024***"CYP2D6 GenoMatcher."*
+**Hemma Kargl, 2024** *"CYP2D6 GenoMatcher."*
 
 ### References:
 
