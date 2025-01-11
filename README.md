@@ -2,7 +2,7 @@
 ---
 
 # CYP2D6 GenoMatcher
-***For Research Use Only***
+### For Research Use Only
 This repository contains Python scripts designed to process haplotype data from PharmVar and analyze input variant data formatted as a VCF (Variant Call Format) file. The tool focuses specifically on the **CYP2D6 gene**, providing an efficient workflow for filtering, combining, and analyzing haplotypes to ultimately determine genotypes.
 
 ---
