@@ -1,28 +1,58 @@
 #!/usr/bin/env python3
 
+import os
 import io
 import re
 import pandas as pd  # type: ignore
+import shutil
+import glob
 
-def read_vcf(path):
+def read_vcf_and_move(input_path, destination_path):
     """
-    Reads a VCF file and returns its contents as a Pandas DataFrame.
+    Reads a VCF file from the given input path, returns its contents as a Pandas DataFrame,
+    and moves the file to a specified destination path.
     Ignores metadata lines starting with '##'.
 
     Args:
-        path (str): Path to the VCF file.
+        input_path (str): Path to the directory containing the VCF file.
+        destination_path (str): Path to move the VCF file after reading.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the VCF file data.
+        tuple: A tuple containing:
+            - pd.DataFrame: A DataFrame containing the VCF file data.
+            - str: The filename of the VCF file.
     """
-    with open(path, 'r') as f:
+    # Find the first .vcf file in the input path
+    vcf_files = [file for file in os.listdir(input_path) if file.endswith('.vcf')]
+    if not vcf_files:
+        raise FileNotFoundError("No .vcf files found in the provided directory.")
+    
+    # Get the full file path and filename
+    vcf_file_path = os.path.join(input_path, vcf_files[0])
+    vcf_file_name = vcf_files[0]
+    
+    # Read the .vcf file
+    with open(vcf_file_path, 'r') as f:
         lines = [l for l in f if not l.startswith('##')]
-    return pd.read_csv(
+    
+    # Load the data into a Pandas DataFrame
+    vcf_data = pd.read_csv(
         io.StringIO(''.join(lines)),
-        dtype={'#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
-               'QUAL': str, 'FILTER': str, 'INFO': str},
+        dtype={
+            '#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
+            'QUAL': str, 'FILTER': str, 'INFO': str
+        },
         sep='\t'
     ).rename(columns={'#CHROM': 'CHROM'})
+    
+    # Ensure the destination path exists
+    os.makedirs(destination_path, exist_ok=True)
+    
+    # Move the file to the destination path
+    destination_file_path = os.path.join(destination_path, vcf_file_name)
+    shutil.move(vcf_file_path, destination_file_path)
+    
+    return vcf_data, vcf_file_name
 
 def extract_rs_genotypes(diplotypes_df, vcf_df):
     """
@@ -103,13 +133,15 @@ def evaluate_matches(diplotypes_df, data_input):
 
     return matches
 
-def print_matches(diplotypes_df, matches):
+def print_matches(diplotypes_df, matches, output_path, vcf_filename):
     """
-    Print matched genotypes sorted by ranking and include CNV values.
+    Save matched genotypes sorted by ranking and include CNV values to a text file.
 
     Args:
         diplotypes_df (pd.DataFrame): DataFrame containing genotypes, rankings, and CNV values.
-        matches (list): List of genotype names to filter and print. Prints only highest ranked genotype.
+        matches (list): List of genotype names to filter and print. Saves only the highest ranked genotype.
+        output_path (str): Path to save the adjusted genotype file.
+        vcf_filename (str): Filename of the VCF file, used to name the output file.
 
     Returns:
         None
@@ -121,43 +153,54 @@ def print_matches(diplotypes_df, matches):
     # Sort the filtered DataFrame by Ranking in descending order
     matches_sorted = matches_df.sort_values(by='Ranking', ascending=False)
 
-    # Print only the first match with Ranking and CNV values
+    # Process only the first match with Ranking and CNV values
     if not matches_sorted.empty:
         first_match = matches_sorted.iloc[0]
         genotype = first_match['Genotype']
-        
+
         # Adjust the genotype to remove redundant "CYP2D6" prefixes
         adjusted_genotype = re.sub(r'\bCYP2D6\*', '*', genotype)  # Remove all "CYP2D6*"
         adjusted_genotype = adjusted_genotype.replace('*', 'CYP2D6*', 1)  # Add back the first "CYP2D6*"
-        
-        print(adjusted_genotype)
+
+        # Create the output directory if it doesn't exist
+        os.makedirs(output_path, exist_ok=True)
+
+        # Generate the output file name using the VCF filename
+        output_file_name = f"{os.path.splitext(vcf_filename)[0]}.txt"
+        output_file_path = os.path.join(output_path, output_file_name)
+
+        # Save the adjusted genotype to the output file
+        with open(output_file_path, 'w') as f:
+            f.write(adjusted_genotype + '\n')
+
+        print(f"Adjusted genotype saved to: {output_file_path}")
     else:
         print("No matches found.")
 
-def print_all_matches(diplotypes_df, matches):
-    """
-    Print matched genotypes sorted by ranking and include CNV values.
+# def print_all_matches(diplotypes_df, matches): # This function is not in use
+#     """
+#     Print matched genotypes sorted by ranking and include CNV values.
 
-    Args:
-        diplotypes_df (pd.DataFrame): DataFrame containing genotypes, rankings, and CNV values.
-        matches (list): List of genotype names to filter and print.
+#     Args:
+#         diplotypes_df (pd.DataFrame): DataFrame containing genotypes, rankings, and CNV values.
+#         matches (list): List of genotype names to filter and print.
 
-    Returns:
-        None
-    """
-    # Filter rows in diplotypes_df that match the Genotype in matches
-    matches_df = diplotypes_df[diplotypes_df['Genotype'].isin(matches)]
+#     Returns:
+#         None
+#     """
+#     # Filter rows in diplotypes_df that match the Genotype in matches
+#     matches_df = diplotypes_df[diplotypes_df['Genotype'].isin(matches)]
 
-    # Sort the filtered DataFrame by Ranking in descending order
-    matches_sorted = matches_df.sort_values(by='Ranking', ascending=False)
+#     # Sort the filtered DataFrame by Ranking in descending order
+#     matches_sorted = matches_df.sort_values(by='Ranking', ascending=False)
 
-    # Print the sorted matches with Ranking and CNV values
-    # print("Matches nach Wahrscheinlichkeit absteigend sortiert:")
-    for _, row in matches_sorted.iterrows():
-        genotype = row['Genotype']
-        ranking = row['Ranking']
-        cnv_value = row['CNV']
-        print(f"100% Match: {genotype}, Ranking: {ranking}, CNV-Wert: {cnv_value}")
+#     # Print the sorted matches with Ranking and CNV values
+#     # print("Matches nach Wahrscheinlichkeit absteigend sortiert:")
+#     for _, row in matches_sorted.iterrows():
+#         genotype = row['Genotype']
+#         ranking = row['Ranking']
+#         cnv_value = row['CNV']
+#         print(f"100% Match: {genotype}, Ranking: {ranking}, CNV-Wert: {cnv_value}")
 
 def main():
     """
@@ -167,16 +210,21 @@ def main():
     3. Extract the CNV value from the VCF data.
     4. Compare user-provided genotypes against the reference DataFrame.
     5. Identify and rank matches based on likelihood and CNV values.
-    6. Print the results sorted by ranking and CNV values.
+    6. Print the results sorted by ranking and CNV values to a txt file.
     """
 
     # Step 1: Load the reference DataFrame containing diplotypes
-    file_path = '../00-preprocessing_data/output/CYP2D6_2025-01-10.pkl'
-    diplotypes_df = pd.read_pickle(file_path)
+    directory_path = '../00-preprocessing_data/output/'
+    pkl_files = glob.glob(os.path.join(directory_path, "*.pkl"))
+    if not pkl_files:
+        raise FileNotFoundError("No .pkl files found in the provided directory.")
+    latest_pkl_file = max(pkl_files, key=os.path.getmtime)
+    diplotypes_df = pd.read_pickle(latest_pkl_file)
 
     # Step 2: Load the VCF file with sample genotype data
-    sample_filepath = './input/Test_Input_1_1.vcf'
-    vcf_data = read_vcf(sample_filepath)
+    sample_filepath = './input'
+    processed_filepath = './input/processed_data'
+    vcf_data, vcf_filename = read_vcf_and_move(sample_filepath, processed_filepath)
 
     # Step 3: Extract the CNV value from the VCF data
     CNV = vcf_data.loc[vcf_data['ID'] == 'CYP2D6_CNV', 'PharmCAT']
@@ -190,7 +238,8 @@ def main():
     results = evaluate_matches(diplotypes_df, sample_data)
 
     # Step 6: Print the matched genotypes sorted by ranking and CNV values
-    print_matches(diplotypes_df, results)
+    output_path = './output'
+    print_matches(diplotypes_df, results, output_path, vcf_filename)
 
 
 if __name__ == '__main__':
