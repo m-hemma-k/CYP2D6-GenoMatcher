@@ -241,7 +241,7 @@ The output will be saved as a `.txt` file in the `output` folder, containing the
 
 1. **PharmVar Data**:
 
-   **1.1 ****\`\`**** File**
+   **1.1 .tsv File**
 
    ```
    #version=pharmvar-6.1.8
@@ -251,7 +251,7 @@ The output will be saved as a `.txt` file in the `output` folder, containing the
    CYP2D6*1.002	CYP2D6	rs28371732	NG_008376.4	8848	8848	G	A	substitution
    ```
 
-   **1.2 ****\`\`**** Files**
+   **1.2 .vcf Files**
 
    ```
    ##fileformat=VCFv4.1
