@@ -173,7 +173,7 @@ def print_matches(diplotypes_df, matches, output_path, vcf_filename):
         with open(output_file_path, 'w') as f:
             f.write(adjusted_genotype + '\n')
 
-        print(f"Adjusted genotype saved to: {output_file_path}")
+        print(f"Genotype saved to: {output_file_path}")
     else:
         print("No matches found.")
 
@@ -227,8 +227,19 @@ def main():
     vcf_data, vcf_filename = read_vcf_and_move(sample_filepath, processed_filepath)
 
     # Step 3: Extract the CNV value from the VCF data
-    CNV = vcf_data.loc[vcf_data['ID'] == 'CYP2D6_CNV', 'PharmCAT']
-    CNV_value = CNV.iloc[0] if not CNV.empty else None
+    txt_filename = os.path.splitext(vcf_filename)[0] + '.txt'
+    txt_file_path = os.path.join('./input', txt_filename)
+    if os.path.exists(txt_file_path):
+        data = {}
+        with open(txt_file_path, 'r') as file:
+            for line in file:
+                key, value = line.strip().split(maxsplit=1)
+                data[key] = value
+        key_to_extract = 'Exon9'
+        CNV_value = data.get(key_to_extract)
+
+    destination_file_path = os.path.join(processed_filepath, txt_filename)
+    shutil.move(txt_file_path, destination_file_path)
 
     # Step 4: Extract genotypes for specific rsIDs from the VCF data
     sample_data = extract_rs_genotypes(diplotypes_df, vcf_data)
