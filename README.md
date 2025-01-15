@@ -63,6 +63,10 @@ This is the main script to run for evaluating genotypes.
 
    - Extracts rsIDs from the VCF file and matches them with a reference DataFrame.
 
+3. **Extracting CNV values**
+
+   - Extract CNV values from a txt file.
+
 3. **User Input Matching**
 
    - Compares user-provided genetic input against a reference DataFrame of haplotypes.
@@ -134,76 +138,6 @@ After running `install.sh`, the environment should be ready for analysis. Procee
 
 ---
 
-## **Features**
-
-### **Preprocessing Script**:
-
-This script should only be run when updating your desired `rsIDs` or when new PharmVar data becomes available.
-
-1. **Rewrite Reference Allele and Stop**
-
-   - Updates Variant Allele and Alternate Allele in the TSV file using ALT and REF values from the VCF files.
-
-2. **Filtering and Preprocessing**
-
-   - Filters PharmVar data to include only relevant `rsIDs`.
-   - Ensures that haplotypes like `CYP2D6*1` and `CYP2D6*5` are included in the analysis.
-
-3. **Handling Special Combinations**
-
-   - Processes hybrid haplotypes (e.g., `CYP2D6*1 + CYP2D6*38`).
-   - Combines alleles for specified `rsIDs` into a unified dataset.
-
-4. **Copy Number Variation (CNV)**
-
-   - Generates duplications (`x2`) and triplications (`x3`) for specified haplotypes.
-   - Assigns predefined CNV values for specific hybrid haplotypes.
-
-5. **Haplotype Ranking**
-
-   Assigns rankings to haplotypes based on scientific categorizations, as outlined by Megan Kane, PhD ([NCBI Bookshelf, 2021](https://www.ncbi.nlm.nih.gov/books/NBK574601/)):
-
-   - Assigns rankings to haplotypes based on scientific categorizations:
-     - **Top Tier (2)**: Common and impactful haplotypes.
-     - **Second Tier (1)**: Less impactful haplotypes.
-     - **Others (0)**: Remaining haplotypes.
-
-6. **Unique Pair Generation**
-
-   - Creates unique pairings of haplotypes, including self-pairings.
-   - Combines CNV values, rankings, and allele data for each pairing.
-
-7. **Output**
-
-   - Saves the processed data as a `.pkl` file in a user-specified directory.
-   - Outputs are ready for direct use in downstream analysis or visualization.
-
-### **Main Script (Genotype Evaluation Script)**:
-
-This is the main script to run for evaluating genotypes.
-
-1. **Input VCF Files**
-
-   - Reads VCF files and processes them into a DataFrame while ignoring metadata lines.
-
-2. **Extracting rsID Genotypes**
-
-   - Extracts rsIDs from the VCF file and matches them with a reference DataFrame.
-
-3. **User Input Matching**
-
-   - Compares user-provided genetic input against a reference DataFrame of haplotypes.
-
-4. **Match Evaluation**
-
-   - Matches user input with haplotypes, sorts them by ranking, and includes CNV values.
-
-5. **Output**
-
-   - Prints the genotype match directly to a text file (e.g., `CYP2D6*1/CYP2D6*1`).
-
----
-
 ## **Usage**
 
 ### **1. Preprocessing Script**
@@ -237,7 +171,8 @@ The output will be saved as a `.txt` file in the `output` folder, containing the
 
 ## **Input and Output**
 
-### Input
+### 00-preprocessing_data - Input
+## 
 
 1. **PharmVar Data**:
 
