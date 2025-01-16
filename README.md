@@ -93,12 +93,36 @@ Before running the installation script, ensure the required input files are in t
 
 ### Step 2: Run the Installation Script
 
-The installation script is located in the `00-preprocessing_data` directory. Execute the `install.sh` script in the terminal:
+The installation script is located in the `00-preprocessing_data` directory. To execute the `install.sh` script in the terminal, follow these steps:
 
-```bash
-./install.sh
-```
+1. Open a terminal window on your computer.
+   - On **Windows**, you can use Command Prompt, PowerShell, or a terminal emulator like Git Bash.
+   - On **macOS** or **Linux**, use the built-in Terminal application.
 
+2. Navigate to the `00-preprocessing_data` directory using the `cd` command. For example:
+
+   ```bash
+   cd /path/to/00-preprocessing_data
+   ```
+
+3. Execute the installation script by typing the following command:
+
+   ```bash
+   ./install.sh
+   ```
+
+   - If you encounter a "Permission Denied" error, you may need to make the script executable first. Use this command:
+
+     ```bash
+     chmod +x install.sh
+     ```
+
+   Then rerun the script:
+
+   ```bash
+   ./install.sh
+   ```
+   
 The `install.sh` script performs the following actions:
 
 - **Dependency Installation**: Ensures that the required Python dependencies (e.g., `pandas`) are installed.
