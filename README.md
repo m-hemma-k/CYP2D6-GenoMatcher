@@ -144,8 +144,8 @@ After running `install.sh`, the environment should be ready for analysis. Procee
 
 For first usage, two files are pre-saved in the `01-genotype_CYP2D6/input` folder:
 
-- `.vcf` file
-- `.txt` file
+- `example_data.vcf` file
+- `example_data.txt` file
 
 For further usage:
 
