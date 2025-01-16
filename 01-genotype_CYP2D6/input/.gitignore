@@ -2,3 +2,5 @@
 *
 # Except this file
 !.gitignore
+!example_data.vcf
+!example_data.txt
