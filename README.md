@@ -5,6 +5,8 @@
 #### *For Research Use Only*
 This repository contains Python scripts designed to process haplotype data from PharmVar and analyze input variant data formatted as a VCF (Variant Call Format) file. The tool focuses specifically on the **CYP2D6 gene**, providing an efficient workflow for filtering, combining, and analyzing haplotypes to ultimately determine genotypes.
 
+The current version of the program is designed to extract the Copy Number Variation (CNV) value specifically for exon 9. This functionality is based on the Thermo Fisher Scientific assay Hs00010001_cn. To ensure proper usage and interpretation of the assay data, users are advised to carefully read the instructions provided on the official Thermo Fisher website: [Thermo Fisher Assay Hs00010001_cn](https://www.thermofisher.com/order/genome-database/details/copy-number/Hs00010001_cn).
+
 ---
 
 ## Features
@@ -34,7 +36,7 @@ This script should only be run when updating your desired `rsIDs` or when new Ph
 
 5. **Haplotype Ranking**
 
-   Assigns rankings to haplotypes based on scientific categorizations, as outlined by Megan Kane, PhD ([NCBI Bookshelf, 2021](https://www.ncbi.nlm.nih.gov/books/NBK574601/)):
+   Assigns rankings to haplotypes based on scientific categorizations, as outlined by Megan Kane, PhD ([NCBI Bookshelf, 2021](https://www.ncbi.nlm.nih.gov/books/NBK574601/):
 
    - Assigns rankings to haplotypes based on scientific categorizations:
      - **Top Tier (2)**: Common and impactful haplotypes.
@@ -81,13 +83,14 @@ This is the main script to run for evaluating genotypes.
 
 ---
 
-## Installation
+### Installation
 
 ---
 
 ## **Prepare Input Files**
 
-Before running the installation script, ensure that the required input files are in the correct locations:
+Before running the installation script, ensure the required input files are in their predefined locations. 
+These files are already pre-saved but can be modified if needed by following these steps:
 
 1. **PharmVar Data**:
 
@@ -95,31 +98,25 @@ Before running the installation script, ensure that the required input files are
    - Download the haplotype data (`Download Gene Data`).
    - Extract the contents and place the `CYP2D6-6.2` folder in `00-preprocessing_data/input`.
 
-2. **VCF Files**:
-
-   - Place your sample `.vcf` files in the `01-genotype_CYP2D6/input` folder.
-
-3. **rs\_numbers.txt**:
+2. **rs\_numbers.txt**:
 
    - Ensure `rs_numbers.txt` is located in the `00-preprocessing_data/input` directory.
+   - You can customize the predefined list as needed.
+
+   A list of `rsIDs`, e.g.:
+
+   ```
+   rs35742686
+   rs3892097
+   ```
 
 ---
 
-## **Installation**
+## **Step 2: Run the Installation Script**
 
-The installation script is located in the `00-preprocessing_data` directory. Follow these steps to install:
+The installation script is located in the `00-preprocessing_data` directory.
 
-### **Step 1: Navigate to the Directory**
-
-Navigate to the `00-preprocessing_data` directory:
-
-```bash
-cd 00-preprocessing_data
-```
-
-### **Step 2: Run the Installation Script**
-
-Execute the `install.sh` script:
+Execute the `install.sh` script in the terminal:
 
 ```bash
 ./install.sh
@@ -142,13 +139,49 @@ After running `install.sh`, the environment should be ready for analysis. Procee
 
 ### **1. Preprocessing Script**
 
-If necessary, you can manually run the preprocessing script to prepare or update data:
+1. **Sample Files**:
 
-```bash
-python preprocess_data.py
-```
+   For the first usage two files are already presaved in the `01-genotype_CYP2D6/input` folder:
+   - 
+   - 
 
-This script processes the `rs_numbers.txt` file and PharmVar data to generate the required reference files for genotype evaluation.
+   For further usage:
+   - Place your sample `.vcf` file in the `01-genotype_CYP2D6/input` folder.
+   - Place your sample `.txt` file in the `01-genotype_CYP2D6/input` folder.
+   - The `.vcf` and `.txt` file MUST have the same name, otherwise they cannot be processed.
+
+   Here is an example of a `.vcf` file:
+
+   ```
+   ##fileformat=VCFv4.2
+   ##source=PharmCAT allele definitions
+   ##fileDate=2023-02-03T08:20:52.044-08:00
+   ##contig=<ID=chr1,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr2,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr4,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr6,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr7,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr10,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr12,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr13,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr16,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr19,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chr22,assembly=GRCh38.p13,species="Homo sapiens">
+   ##contig=<ID=chrX,assembly=GRCh38.p13,species="Homo sapiens">
+   ##FILTER=<ID=PASS,Description="All filters passed">
+   ##INFO=<ID=PX,Number=.,Type=String,Description="Gene">
+   ##INFO=<ID=POI,Number=0,Type=Flag,Description="Position of Interest but not part of an allele definition">
+   ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+   #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	PharmCAT
+   chr22	42130692	rs1065852	G	A	.	PASS	PX=CYP2D6	GT	0/0
+   chr22	42132375	rs1080985	G	C	.	PASS	PX=CYP2D6	GT	0/0
+   ```
+
+   The `.txt` file must adhere to this format: the first and second words should be separated by a tab:
+
+   ```
+   Exon9 2
+   ```
 
 ### **2. Genotype Evaluation Script**
 
@@ -165,49 +198,8 @@ python 01-genotype_CYP2D6/genotype_CYP2D6.py
 
 ### **3. Output**
 
-The output will be saved as a `.txt` file in the `output` folder, containing the best genotype result (e.g., `CYP2D6*1/CYP2D6*1`).
-
----
-
-## **Input and Output**
-
-### 00-preprocessing_data - Input
-## 
-
-1. **PharmVar Data**:
-
-   **1.1 .tsv File**
-
-   ```
-   #version=pharmvar-6.1.8
-   Haplotype Name	Gene	rsID	ReferenceSequence	Variant Start	Variant Stop	Reference Allele	Variant Allele	Type
-   CYP2D6*1	CYP2D6	REFERENCE	.	.	.	.	.	.
-   CYP2D6*1.001	CYP2D6	REFERENCE	.	.	.	.	.	.
-   CYP2D6*1.002	CYP2D6	rs28371732	NG_008376.4	8848	8848	G	A	substitution
-   ```
-
-   **1.2 .vcf Files**
-
-   ```
-   ##fileformat=VCFv4.1
-   ##fileDate=20241216
-   ##contig=<ID=NG_008376.4,length=11312>
-   ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-   ##INFO=<ID=VI,Number=1,Type=String,Description="Variant impact">
-   #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
-   NG_008376.4	4976	rs28371695	G	GG	.	.	.
-   ```
-
-2. **rs\_numbers.txt**: A list of `rsIDs` to filter, e.g.:
-
-   ```
-   rs35742686
-   rs3892097
-   ```
-
-### Output
-
-The processed data is saved as a `.txt` file containing only the best genotype result (e.g., `CYP2D6*1/CYP2D6*1`).
+The output will be saved as a `.txt` file in the `01-genotype_CYP2D6/output` folder, containing the best genotype result (e.g., `CYP2D6*1/CYP2D6*1`).
+The input sample files will be moved to the folder `01-genotype_CYP2D6/input/processed_data`.
 
 ---
 
@@ -218,7 +210,7 @@ The processed data is saved as a `.txt` file containing only the best genotype r
 1. If the `install.sh` script reports missing files or directories:
 
    - Verify that all input files are placed in their respective locations.
-   - Check that required folders, such as `RefSeqGene` and `input`, exist.
+   - Check that required folder `00/-preprocessong_data/input/CYP2D6-6.2/GRCh38` exists.
 
 2. If the `.bat` file does not execute:
 
@@ -252,6 +244,11 @@ If you use this script or any part of it for **publication or presentation**, pl
 2. **PharmVar Consortium**   PharmVar Gene: CYP2D6   Available at: [https://www.pharmvar.org/gene/CYP2D6](https://www.pharmvar.org/gene/CYP2D6)   Accessed: 11/01/2025
 
 3. Gaedigk A, Ingelman-Sundberg M, Miller NA, et al.   The Pharmacogene Variation (PharmVar) Consortium: Incorporation of the Human Cytochrome P450 (CYP) Allele Nomenclature Database.   *Clin Pharmacol Ther.* 2018;103(3):399-401.   DOI: [10.1002/cpt.910](https://doi.org/10.1002/cpt.910)
+
+4. Thermo Fisher Scientific - Genome Database
+Copy Number Assay: Hs00010001_cn
+Available at: https://www.thermofisher.com/order/genome-database/details/copy-number/Hs00010001_cn
+Accessed: 11/01/2025
 
 ---
 
